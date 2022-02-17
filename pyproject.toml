@@ -2,7 +2,17 @@
 name = "pel"
 version = "0.1.0"
 description = "The most elegant build system."
+readme = "README.md"
 authors = ["Neocrym Records Inc. <engineering@neocrym.com>"]
+homepage = "https://github.com/neocrym/pel"
+repository = "https://github.com/neocrym/pel"
+license = "MIT"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
