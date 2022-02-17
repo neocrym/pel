@@ -1,0 +1,5 @@
+target = "pel/_vendor"
+packages = [
+    "python-dateutil",
+    "graphlib-backport",
+]

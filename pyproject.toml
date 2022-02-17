@@ -1,0 +1,66 @@
+[tool.poetry]
+name = "pel"
+version = "0.1.0"
+description = ""
+authors = ["James Mishra <james.mishra@neocrym.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+vendorize = "^0.2.2"
+isort = "^5.10.1"
+black = "^22.1.0"
+pylint = "^2.12.2"
+mypy = "^0.931"
+
+[tool.poetry.scripts]
+pel = 'pel.console:run'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py38']
+include = '\.pyi?$'
+exclude = '''
+
+(
+  /(
+    | \.git
+    | \.mypy_cache
+    | \.venv
+    | venv
+    | _vendor
+  )/
+)
+'''
+[tool.isort]
+known_first_party = ["pel"]
+skip = [".git", ".mypy_cache", ".venv", "venv", "_vendor"]
+
+
+[tool.mypy]
+python_version = "3.8"
+#warn_return_any = true
+#warn_unused_configs = true
+#ignore_missing_imports = true
+follow_imports = "silent"
+strict = true
+exclude = [
+    '^pel/_vendor'
+]
+
+
+[tool.pylint]
+
+[tool.pylint.master]
+ignore = ['.git', '.mypy_cache', '.venv', 'venv', '_vendor']
+disable = [
+  'exec-used',
+  'protected-access',
+  'wildcard-import',
+  'unused-wildcard-import',
+]
