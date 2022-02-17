@@ -2,8 +2,19 @@
 import argparse
 import threading
 from enum import Enum, auto
-from typing import (Any, Dict, Iterator, List, Mapping, Optional, Sequence,
-                    Set, Type, Union, cast)
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Type,
+    Union,
+    cast,
+)
 
 from pel._vendor.graphlib import TopologicalSorter  # type: ignore
 
