@@ -2,12 +2,25 @@ help:
 	echo HELP
 .PHONY: help
 
+install:
+	poetry install --no-dev --remove-untracked
+.PHONY: install
+
+install-dev:
+	poetry install --remove-untracked
+.PHONY: install-dev
+
 fmt:
 	@echo "Running black formatter"
 	poetry run black pel tests
 	@echo "Running isort formatter"
 	poetry run isort pel tests
 .PHONY: fmt
+
+fmt-check:
+	poetry run black --check pel tests
+	poetry run isort --check pel tests
+.PHONY: fmt-check
 
 pylint: fmt
 	@echo "Running pylint linter"

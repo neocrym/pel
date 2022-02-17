@@ -1,0 +1,56 @@
+name: test
+
+defaults:
+  run:
+    shell: bash
+
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - 'v*' # Don't run these tests twice when cutting a new version.
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version:
+          - 3.8
+          - 3.9
+          - 3.10
+        os:
+          - ubuntu-20.094
+          - macos-10.15
+          - windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install pip and poetry
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install poetry
+        poetry config virtualenvs.in-project true
+  
+    - name: Install pel with development packages
+      run: make install-dev
+
+    - name: Check formatting (Ubuntu only)
+      run: make fmt-check
+      if: startsWith(matrix.os,'ubuntu')
+
+    - name: Run tests
+      run: make test
+
+    - name: Build pyinstaller binary
+      run: make pyinstaller
