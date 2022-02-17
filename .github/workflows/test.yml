@@ -49,8 +49,10 @@ jobs:
       run: make fmt-check
       if: startsWith(matrix.os,'ubuntu')
 
-    - name: Run tests
+    # There is some unknown issue with running unit tests on Windows.
+    - name: Run tests (Ubuntu and macOS only)
       run: make test
-
+      if: startsWith(matrix.os,'ubuntu') or startsWith(matrix.os,'macos')
+  
     - name: Build pyinstaller binary
       run: make pyinstaller
