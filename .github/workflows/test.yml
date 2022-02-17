@@ -52,7 +52,7 @@ jobs:
     # There is some unknown issue with running unit tests on Windows.
     - name: Run tests (Ubuntu and macOS only)
       run: make test
-      if: startsWith(matrix.os,'ubuntu') or startsWith(matrix.os,'macos')
+      if: startsWith(matrix.os,'ubuntu') || startsWith(matrix.os,'macos')
   
     - name: Build pyinstaller binary
       run: make pyinstaller
