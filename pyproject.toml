@@ -8,7 +8,7 @@ authors = ["Neocrym Records Inc. <engineering@neocrym.com>"]
 python = ">=3.8,<3.11"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^7.0"
 vendorize = "^0.2.2"
 isort = "^5.10.1"
 black = "^22.1.0"
