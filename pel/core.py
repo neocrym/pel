@@ -1,11 +1,11 @@
 """The Pel Graph, Task, and ArgParser models."""
 import argparse
 import threading
-from typing import (Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple,
-                    Type, Union, cast)
+from enum import Enum, auto
+from typing import (Any, Dict, Iterator, List, Mapping, Optional, Sequence,
+                    Set, Type, Union, cast)
 
 from pel._vendor.graphlib import TopologicalSorter  # type: ignore
-from pel.exceptions import MissingGraph
 
 
 def _get_recursive_need_names_from_tasks(end_tasks: Sequence[Type["Task"]]) -> Set[str]:
@@ -17,6 +17,60 @@ def _get_recursive_need_names_from_tasks(end_tasks: Sequence[Type["Task"]]) -> S
     return set(_recursive(set(end_tasks)))
 
 
+class TaskExecuted(Enum):
+    """Describes whether a Task has been executed."""
+
+    NOT_RUN = auto()
+    NOT_EXPIRED = auto()
+    EXECUTED = auto()
+    RAISED_EXCEPTION = auto()
+    SKIPPED = auto()
+
+
+class Task:
+    """Subclass this to create your own Task types."""
+
+    needs: Union[List[Type["Task"]], Type["Task"], None] = None
+
+    _result: Any = NotImplemented
+    _exception: Optional[BaseException] = None
+    _executed: TaskExecuted = TaskExecuted.NOT_RUN
+
+    @classmethod
+    def _get_needs(cls) -> List[Type["Task"]]:
+        """
+        Getter method for this Task's dependencies.
+        """
+        if not cls.needs:
+            return []
+        if isinstance(cls.needs, Task.__class__):  # type: ignore
+            return [cls.needs]  # type: ignore
+        if not isinstance(cls.needs, list):
+            cast(List[Type["Task"]], cls.needs)
+            raise TypeError(f"bad needs type {cls.needs}")
+        for task in cls.needs:
+            if not isinstance(task, Task.__class__):  # type: ignore
+                raise TypeError(f"bad needs task type {task}")
+        return cls.needs
+
+    @classmethod
+    def is_expired(cls) -> bool:
+        """
+        Override this to return False when this Task does not need to run.
+
+        By default, this classmethod always returns True, which is handy
+        for when you always want a Task to run.
+        """
+        return True
+
+    @classmethod
+    def run(cls) -> None:
+        """
+        Override this with the actual business logic that you want this Task to run.
+        """
+        raise NotImplementedError("HI")
+
+
 class Graph:
     """Keeps track of :py:class:`Task` classes and executes them."""
 
@@ -26,13 +80,13 @@ class Graph:
 
     def clear(self) -> None:
         """Clear all references in the graph."""
-        self._registry: Dict[str, Type["Task"]] = {}
+        self._registry: Dict[str, Type[Task]] = {}
 
-    def get_task(self, name: str) -> Type["Task"]:
+    def get_task(self, name: str) -> Type[Task]:
         """Get a Task class by its name."""
         return self._registry[name]
 
-    def add_task(self, cls: Type["Task"], bases: Tuple[Type["Task"]]) -> None:
+    def add_task(self, cls: Type[Task]) -> None:
         """
         Add a Task class to the graph.
 
@@ -42,16 +96,22 @@ class Graph:
             bases: The Task class's parents.
         """
         with self._lock:
-            for base in bases:
+            for base in cls.__bases__:
                 self._registry.pop(base.__name__, None)
             self._registry[cls.__name__] = cls
+
+    def add_tasks_from_scope(self, scope: Mapping[str, Any]) -> None:
+        """Search a variable scope dictionary for any Task subclass objects."""
+        for obj in scope.values():
+            if isinstance(obj, Task.__class__):  # type: ignore
+                self.add_task(obj)
 
     def remove_task(self, name: str) -> None:
         """Remove a Task by name."""
         with self._lock:
             self._registry.pop(name, None)
 
-    def get_all_tasks(self) -> Dict[str, Type["Task"]]:
+    def get_all_tasks(self) -> Dict[str, Type[Task]]:
         """Return a dictionary mapping Task names to Task classes."""
         return self._registry
 
@@ -111,7 +171,7 @@ class Graph:
 
     def _get_sorted_tasks(
         self, end_task_names: Union[Sequence[str], str] = ""
-    ) -> List[Type["Task"]]:
+    ) -> List[Type[Task]]:
         """
         Returns all task class instances, topologically sorted by dependencies.
         """
@@ -121,7 +181,7 @@ class Graph:
 
     def get_sorted_tasks(
         self, end_task_names: Union[Sequence[str], str] = ""
-    ) -> List[Type["Task"]]:
+    ) -> List[Type[Task]]:
         """
         Returns all task class instances, topologically sorted by dependencies.
 
@@ -139,9 +199,16 @@ class Graph:
         for task in self._get_sorted_tasks(end_task_names):
             if task.is_expired():
                 print(task.__name__, "[running]")
-                task.run()
+                try:
+                    task._result = task.run()
+                except BaseException as exc:
+                    task._executed = TaskExecuted.RAISED_EXCEPTION
+                    task._exception = exc
+                    raise
+                task._executed = TaskExecuted.EXECUTED
             else:
-                print(task.__name__, "[ignored]")
+                print(task.__name__, "[not expired]")
+                task._executed = TaskExecuted.NOT_EXPIRED
 
     def execute(self, end_task_names: Union[Sequence[str], str] = "") -> None:
         """
@@ -155,80 +222,17 @@ class Graph:
             self._execute(end_task_names)
 
 
-DEFAULT_GRAPH: Optional[Graph] = None
-
-
-class MetaTask(type):
-    """Adds subclasses to the DEFAULT_GRAPH."""
-
-    def __init__(cls: type, name: str, bases: Tuple[Type["Task"]], attrs: Any) -> None:
-        type.__init__(cls, name, bases, attrs)
-        cast(Type["Task"], cls)
-        if DEFAULT_GRAPH is not None:
-            DEFAULT_GRAPH.add_task(cls, bases)
-
-
-class Task(metaclass=MetaTask):
-    """Subclass this to create your own Task types."""
-
-    needs: Union[List[Type["Task"]], Type["Task"], None] = None
-
-    @classmethod
-    def _get_needs(cls) -> List[Type["Task"]]:
-        """
-        Getter method for this Task's dependencies.
-        """
-        if not cls.needs:
-            return []
-        if isinstance(cls.needs, Task.__class__):  # type: ignore
-            return [cls.needs]  # type: ignore
-        if not isinstance(cls.needs, list):
-            cast(List[Type["Task"]], cls.needs)
-            raise TypeError(f"bad needs type {cls.needs}")
-        for task in cls.needs:
-            if not isinstance(task, Task.__class__):  # type: ignore
-                raise TypeError(f"bad needs task type {task}")
-        return cls.needs
-
-    @classmethod
-    def is_expired(cls) -> bool:
-        """
-        Override this to return False when this Task does not need to run.
-
-        By default, this classmethod always returns True, which is handy
-        for when you always want a Task to run.
-        """
-        return True
-
-    @classmethod
-    def run(cls) -> None:
-        """
-        Override this with the actual business logic that you want this Task to run.
-        """
-        raise NotImplementedError("HI")
-
-
 class ArgParser:
     """Parses shell arguments to run Tasks."""
 
-    def __init__(self, *, graph: Optional[Graph] = None) -> None:
+    def __init__(self, *, graph: Graph) -> None:
         """
         Initialize the argument parser.
 
         Args:
-            graph: The Graph to parse. Defaults to the DEFAULT_GRAPH.
+            graph: The Graph to parse.
         """
-        if graph:
-            self._graph: Graph = graph
-        else:
-            if DEFAULT_GRAPH:
-                self._graph = DEFAULT_GRAPH
-            else:
-                raise MissingGraph(
-                    "Please specify a Graph instance to Argparser.__init__() "
-                    "or initialize the default graph by "
-                    "setting `pel.core.DEFAULT_GRAPH = pel.core.Graph()`."
-                )
+        self._graph: Graph = graph
         self._parser = argparse.ArgumentParser()
         group = self._parser.add_mutually_exclusive_group(required=True)
         group.add_argument("--list", "-l", action="store_true")

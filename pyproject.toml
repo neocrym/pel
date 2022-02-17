@@ -51,6 +51,12 @@ exclude = [
     '^pel/_vendor'
 ]
 
+[[tool.mypy.overrides]]
+module = [
+    "pytest",
+]
+ignore_missing_imports = true
+
 
 [tool.pylint]
 

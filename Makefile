@@ -4,19 +4,19 @@ help:
 
 fmt:
 	@echo "Running black formatter"
-	poetry run black pel
+	poetry run black pel tests
 	@echo "Running isort formatter"
-	poetry run isort pel
+	poetry run isort pel tests
 .PHONY: fmt
 
 pylint: fmt
 	@echo "Running pylint linter"
-	poetry run pylint pel
+	poetry run pylint pel tests
 .PHONY: pylint
 
 mypy: fmt
 	@echo "Running mypy linter"
-	poetry run mypy pel
+	poetry run mypy pel tests
 .PHONY: mypy
 
 lint: pylint mypy
@@ -25,6 +25,10 @@ lint: pylint mypy
 pyinstaller:
 	poetry run pyinstaller --name=pel --onefile --clean --noconfirm pel/console.py
 .PHONY: pyinstaller
+
+test:
+	poetry run pytest
+.PHONY: test
 
 vendor:
 	poetry run python-vendorize

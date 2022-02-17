@@ -6,10 +6,17 @@ __all__ = [
 ]
 
 import subprocess
-from typing import List, Union
+from typing import Any, List, NamedTuple, Union
 
 from pel.core import Task
 from pel.filesystem import filesystem_target_is_older_than_source
+
+
+class ShellResult(NamedTuple):
+    """The result of a single shell command."""
+
+    cmd: str
+    proc: "Union[subprocess.CompletedProcess[bytes], subprocess.CompletedProcess[str]]"
 
 
 class Shell(Task):
@@ -31,16 +38,21 @@ class Shell(Task):
         return True
 
     @classmethod
-    def run(cls) -> None:
+    def run(cls) -> Any:
         if isinstance(cls.cmd, str):
             cmds = [cls.cmd]
         else:
             cmds = cls.cmd
-        for cmd in cmds:
-            subprocess.run(
-                cmd,
-                shell=True,
-                text=cls.text,
-                capture_output=cls.quiet,
-                check=cls.check,
+        return [
+            ShellResult(
+                cmd=cmd,
+                proc=subprocess.run(
+                    cmd,
+                    shell=True,
+                    text=cls.text,
+                    capture_output=cls.quiet,
+                    check=cls.check,
+                ),
             )
+            for cmd in cmds
+        ]
