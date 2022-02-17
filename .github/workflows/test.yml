@@ -25,9 +25,9 @@ jobs:
           - "3.9"
           - "3.10"
         os:
-          - ubuntu-20.094
-          - macos-10.15
-          - windows-2019
+          - "ubuntu-20.04"
+          - "macos-10.15"
+          - "windows-2019"
 
     steps:
     - uses: actions/checkout@v2
