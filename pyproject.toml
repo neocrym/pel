@@ -5,7 +5,7 @@ description = ""
 authors = ["James Mishra <james.mishra@neocrym.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -14,6 +14,7 @@ isort = "^5.10.1"
 black = "^22.1.0"
 pylint = "^2.12.2"
 mypy = "^0.931"
+pyinstaller = "^4.9"
 
 [tool.poetry.scripts]
 pel = 'pel.console:run'

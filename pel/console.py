@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 The Pel command line entrypoint.
 
@@ -11,3 +12,7 @@ pel.core.DEFAULT_GRAPH = pel.core.Graph()
 import pel.run  # pylint: disable=wrong-import-position
 
 run = pel.run.run
+
+
+if __name__ == "__main__":
+    run()

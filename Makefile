@@ -22,6 +22,10 @@ mypy: fmt
 lint: pylint mypy
 .PHONY: lint
 
+pyinstaller:
+	poetry run pyinstaller --name=pel --onefile --clean --noconfirm pel/console.py
+.PHONY: pyinstaller
+
 vendor:
 	poetry run python-vendorize
 .PHONY: vendor
