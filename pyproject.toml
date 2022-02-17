@@ -15,6 +15,7 @@ black = "^22.1.0"
 pylint = "^2.12.2"
 mypy = "^0.931"
 pyinstaller = "^4.9"
+pyclean = "^2.0.0"
 
 [tool.poetry.scripts]
 pel = 'pel.console:run'

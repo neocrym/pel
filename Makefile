@@ -10,6 +10,11 @@ install-dev:
 	poetry install --remove-untracked
 .PHONY: install-dev
 
+clean:
+	rm -rfv dist
+	poetry run pyclean --verbose .
+.PHONY: clean
+
 fmt:
 	@echo "Running black formatter"
 	poetry run black pel tests
