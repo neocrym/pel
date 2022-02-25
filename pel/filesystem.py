@@ -1,7 +1,7 @@
 """Utilities for filesystem tasks."""
 import os
 import stat
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional, Sequence, Tuple
 
 
 def path_iterator(root: str) -> Iterator[Tuple[str, float]]:
@@ -34,7 +34,7 @@ def path_iterator(root: str) -> Iterator[Tuple[str, float]]:
         yield from _path_iterator(root_abspath)
 
 
-def filesystem_path_is_not_older_than(path: str, last_modified: float) -> bool:
+def filesystem_path_is_newer_or_eq(path: str, last_modified: float) -> bool:
     """
     Returns ``True`` if any file or directory in ``path``
     has a modification time >= ``last_modified``.
@@ -47,17 +47,22 @@ def filesystem_path_is_not_older_than(path: str, last_modified: float) -> bool:
     return False
 
 
-def filesystem_target_is_older_than_source(*, source: str, target: str) -> bool:
+def any_source_newer_or_eq_than_target(
+    *, sources: Sequence[str], targets: Sequence[str]
+) -> bool:
     """
-    Return True if ``target`` is newer than ``source``.
+    Returns ``True`` if any source path is newer than any target path.
     """
     newest_target_lm: Optional[float] = None
     try:
-        for _, iter_lm in path_iterator(target):
-            if newest_target_lm is None or newest_target_lm < iter_lm:
-                newest_target_lm = iter_lm
+        for target in targets:
+            for _, iter_lm in path_iterator(target):
+                if newest_target_lm is None or newest_target_lm < iter_lm:
+                    newest_target_lm = iter_lm
     except FileNotFoundError:
         return True
     if newest_target_lm is None:
         return True
-    return filesystem_path_is_not_older_than(source, newest_target_lm)
+    return any(
+        filesystem_path_is_newer_or_eq(source, newest_target_lm) for source in sources
+    )

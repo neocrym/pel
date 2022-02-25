@@ -83,4 +83,7 @@ disable = [
   'protected-access',
   'wildcard-import',
   'unused-wildcard-import',
+  'no-self-use',
+  'too-many-instance-attributes',
+  'duplicate-code'
 ]
