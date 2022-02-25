@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pel"
-version = "0.1.0"
+version = "0.0.0"
 description = "The most elegant build system."
 readme = "README.md"
 authors = ["Neocrym Records Inc. <engineering@neocrym.com>"]
