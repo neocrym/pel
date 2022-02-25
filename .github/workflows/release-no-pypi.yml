@@ -1,10 +1,11 @@
-name: release
+name: release-no-pypi
 
 defaults:
   run:
     shell: bash
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
@@ -39,20 +40,6 @@ jobs:
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
-
-    - name: Build the wheel (Ubuntu only)
-      id: publish_to_pypi
-      run: |
-        poetry version ${{ steps.get_version.outputs.VERSION }}
-        poetry build
-      if: startsWith(matrix.os,'ubuntu')
-
-    - name: Publish wheel to Poetry (Ubuntu only)
-      id: publish_wheel_to_poetry
-      run: poetry publish --no-interaction
-      if: startsWith(matrix.os,'ubuntu')
-      env:
-        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
 
     - name: Create GitHub release (Ubuntu only)
       id: create_release
