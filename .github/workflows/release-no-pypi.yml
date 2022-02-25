@@ -6,9 +6,6 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release:
@@ -41,6 +38,13 @@ jobs:
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
+    - name: Build the wheel (Ubuntu only)
+      id: publish_to_pypi
+      run: |
+        poetry version ${{ steps.get_version.outputs.VERSION }}
+        poetry build
+      if: startsWith(matrix.os,'ubuntu')
+
     - name: Create GitHub release (Ubuntu only)
       id: create_release
       uses: actions/create-release@v1
@@ -50,8 +54,8 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+        draft: true
+        prerelease: true
 
     - name: Upload Python wheel to the GitHub release (Ubuntu only)
       id: upload_python_wheel
