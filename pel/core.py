@@ -1,7 +1,7 @@
 """The Pel Graph, Task, and ArgParser models."""
 import argparse
+import collections
 import threading
-from collections import OrderedDict
 from enum import Enum, auto
 from typing import (
     Any,
@@ -10,6 +10,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    OrderedDict,
     Sequence,
     Set,
     Type,
@@ -139,7 +140,7 @@ class Graph:
         self, end_task_names: Union[Sequence[str], str] = ""
     ) -> OrderedDict[str, Set[str]]:
         """Return a dict mapping task names to their dependencies' names."""
-        needs_map: OrderedDict[str, Set[str]] = OrderedDict()
+        needs_map: OrderedDict[str, Set[str]] = collections.OrderedDict()
         if end_task_names:
             tasks = self._get_recursive_need_names(end_task_names)
         else:
